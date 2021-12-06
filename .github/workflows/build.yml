@@ -48,7 +48,7 @@ jobs:
         run: |
           mkdir ${{ github.workspace }}/output
           ./autogen.sh
-          ./configure --prefix=${{ github.workspace }}/output --with-sysroot=${{ env.ANDROID_NDK_HOME }}/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile
+          ./configure --prefix=${{ github.workspace }}/output --with-sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile
           make -j4
           make install
           ls ${{ github.workspace }}/output
@@ -67,26 +67,25 @@ jobs:
       #     name: build-output-android30
       #     path: libopus-android30.a
 
-  # create-release:
-  #   runs-on: ubuntu-20.04
-  #   needs: [build-macos, build-android]
-  #   steps:
-  #     - name: Get build output macos10
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: build-output-macos10
+  create-release:
+    runs-on: ubuntu-20.04
+    # needs: [build-macos, build-android]
+    needs: [build-macos]
+    steps:
+      - name: Get build output macos10
+        uses: actions/download-artifact@v2
+        with:
+          name: build-output-macos10
 
-  #     - name: Get build output android30
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: build-output-android30
+      # - name: Get build output android30
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: build-output-android30
 
-  #     - name: Create release
-  #       uses: softprops/action-gh-release@v1
-  #       with:
-  #         files: |
-  #           libopus-macos10.a
-  #           libopus-android30.a
-  #           COPYING
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            output
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
