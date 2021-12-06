@@ -21,10 +21,9 @@ jobs:
         run: |
           mkdir output
           ./autogen.sh
-          ./configure --prefix=./output --disable-shared
+          ./configure --disable-shared
           make
-          make install
-          ls output
+          ls src/.libs
 
       # - name: Rename build output
       #   run: mv .libs/libopus.a ./libopus-macos10.a
@@ -50,10 +49,9 @@ jobs:
         run: |
           mkdir output
           ./autogen.sh
-          ./configure --host=aarch64-linux-android --prefix=./output --disable-shared --enable-cross-compile
+          ./configure --host=aarch64-linux-android --disable-shared --enable-cross-compile
           make
-          make install
-          ls output
+          ls src/.libs
         env:
           AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ranlib
