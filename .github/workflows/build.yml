@@ -19,12 +19,12 @@ jobs:
 
       - name: Configure and make
         run: |
-          mkdir ${{ env.GITHUB_WORKSPACE }}/output
+          mkdir ${{ github.workspace }}/output
           ./autogen.sh
-          ./configure --prefix=${{ env.GITHUB_WORKSPACE }}/output --disable-shared
+          ./configure --prefix=${{ github.workspace }}/output --disable-shared
           make -j4
           make install
-          ls ${{ env.GITHUB_WORKSPACE }}/output
+          ls ${{ github.workspace }}/output
 
       # - name: Rename build output
       #   run: mv src/.libs/libprotobuf-lite.a ./libprotobuf-lite-macos10.a
@@ -46,12 +46,12 @@ jobs:
 
       - name: Configure and make
         run: |
-          mkdir ${{ env.GITHUB_WORKSPACE }}/output
+          mkdir ${{ github.workspace }}/output
           ./autogen.sh
-          ./configure --prefix=${{ env.GITHUB_WORKSPACE }}/output --with-sysroot=${{ env.ANDROID_NDK_HOME }}/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile
+          ./configure --prefix=${{ github.workspace }}/output --with-sysroot=${{ env.ANDROID_NDK_HOME }}/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile
           make -j4
           make install
-          ls ${{ env.GITHUB_WORKSPACE }}/output
+          ls ${{ github.workspace }}/output
         env:
           AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ranlib
