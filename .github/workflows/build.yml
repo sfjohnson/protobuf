@@ -19,23 +19,22 @@ jobs:
 
       - name: Configure and make
         run: |
-          mkdir output
+          mkdir ${{ env.GITHUB_WORKSPACE }}/output
           ./autogen.sh
-          ./configure --disable-shared
-          make
-          ls src/.libs
+          ./configure --prefix=${{ env.GITHUB_WORKSPACE }}/output --disable-shared
+          make -j4
+          make install
+          ls ${{ env.GITHUB_WORKSPACE }}/output
 
       # - name: Rename build output
-      #   run: mv .libs/libopus.a ./libopus-macos10.a
+      #   run: mv src/.libs/libprotobuf-lite.a ./libprotobuf-lite-macos10.a
 
-      # - name: Upload build output
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: build-output-macos10
-      #     path: |
-      #       include
-      #       libopus-macos10.a
-      #       COPYING
+      - name: Upload build output
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-output-macos10
+          path: |
+            output
 
   build-android:
     runs-on: ubuntu-20.04
@@ -47,11 +46,12 @@ jobs:
 
       - name: Configure and make
         run: |
-          mkdir output
+          mkdir ${{ env.GITHUB_WORKSPACE }}/output
           ./autogen.sh
-          ./configure --host=aarch64-linux-android --disable-shared --enable-cross-compile
-          make
-          ls src/.libs
+          ./configure --prefix=${{ env.GITHUB_WORKSPACE }}/output --with-sysroot=${{ env.ANDROID_NDK_HOME }}/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile
+          make -j4
+          make install
+          ls ${{ env.GITHUB_WORKSPACE }}/output
         env:
           AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ranlib
