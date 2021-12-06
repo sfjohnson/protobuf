@@ -26,8 +26,8 @@ jobs:
           make install
           ls ${{ github.workspace }}/output/lib
 
-      # - name: Rename build output
-      #   run: mv src/.libs/libprotobuf-lite.a ./libprotobuf-lite-macos10.a
+      - name: Rename build output
+        run: mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-macos10.a
 
       - name: Upload build output
         uses: actions/upload-artifact@v2
@@ -35,6 +35,7 @@ jobs:
           name: build-output-macos10
           path: |
             ${{ github.workspace }}/output/include
+            libprotobuf-lite-macos10.a
 
   build-android:
     runs-on: ubuntu-20.04
@@ -49,13 +50,14 @@ jobs:
           mkdir ${{ github.workspace }}/output
           ./autogen.sh
           ./configure --prefix=${{ github.workspace }}/output --host=aarch64-linux-android --disable-shared --enable-cross-compile
+          sudo rm /usr/bin/ld
+          sudo ln -s $LD /usr/bin/ld
           make -j4
           make install
         env:
           AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ranlib
           LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-          linker_path: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
           CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
 
       # - name: Rename build output
