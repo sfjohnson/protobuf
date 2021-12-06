@@ -24,7 +24,7 @@ jobs:
           ./configure --prefix=${{ github.workspace }}/output --disable-shared
           make -j4
           make install
-          ls ${{ github.workspace }}/output
+          ls ${{ github.workspace }}/output/lib
 
       # - name: Rename build output
       #   run: mv src/.libs/libprotobuf-lite.a ./libprotobuf-lite-macos10.a
@@ -34,7 +34,7 @@ jobs:
         with:
           name: build-output-macos10
           path: |
-            output
+            ${{ github.workspace }}/output/include
 
   build-android:
     runs-on: ubuntu-20.04
@@ -48,14 +48,14 @@ jobs:
         run: |
           mkdir ${{ github.workspace }}/output
           ./autogen.sh
-          ./configure --prefix=${{ github.workspace }}/output --with-sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile
+          ./configure --prefix=${{ github.workspace }}/output --host=aarch64-linux-android --disable-shared --enable-cross-compile
           make -j4
           make install
-          ls ${{ github.workspace }}/output
         env:
           AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ranlib
           LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
+          linker_path: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
           CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
 
       # - name: Rename build output
@@ -67,25 +67,24 @@ jobs:
       #     name: build-output-android30
       #     path: libopus-android30.a
 
-  create-release:
-    runs-on: ubuntu-20.04
-    # needs: [build-macos, build-android]
-    needs: [build-macos]
-    steps:
-      - name: Get build output macos10
-        uses: actions/download-artifact@v2
-        with:
-          name: build-output-macos10
+  # create-release:
+  #   runs-on: ubuntu-20.04
+  #   needs: [build-macos, build-android]
+  #   steps:
+  #     - name: Get build output macos10
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: build-output-macos10
 
-      # - name: Get build output android30
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: build-output-android30
+  #     - name: Get build output android30
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: build-output-android30
 
-      - name: Create release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            output
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Create release
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         files: |
+  #           output
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
