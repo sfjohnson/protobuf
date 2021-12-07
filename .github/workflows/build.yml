@@ -24,18 +24,22 @@ jobs:
           ./configure --prefix=${{ github.workspace }}/output --disable-shared
           make -j4
           make install
-          zip include.zip ${{ github.workspace }}/output/include -r
+          pushd ${{ github.workspace }}/output/include
+          zip -r ../../include.zip .
+          popd
 
-      - name: Rename build output
-        run: mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-macos10.a
+      - name: Rename and move build output
+        run: |
+          mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a ${{ github.workspace }}/libprotobuf-lite-macos10.a
 
       - name: Upload build output
         uses: actions/upload-artifact@v2
         with:
           name: build-output-macos10
           path: |
-            include.zip
-            libprotobuf-lite-macos10.a
+            ${{ github.workspace }}/include.zip
+            ${{ github.workspace }}/libprotobuf-lite-macos10.a
+            ${{ github.workspace }}/LICENSE
 
   build-android:
     runs-on: ubuntu-20.04
@@ -88,5 +92,6 @@ jobs:
             include.zip
             libprotobuf-lite-macos10.a
             libprotobuf-lite-android30.a
+            LICENSE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
