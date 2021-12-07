@@ -56,6 +56,7 @@ jobs:
           ./configure --prefix=${{ github.workspace }}/output --host=aarch64-linux-gnu --disable-shared --enable-cross-compile
           sudo rm /usr/bin/ld
           sudo ln -s $LD /usr/bin/ld
+          sudo chmod +x /usr/bin/ld
           make -j4
           make install
         env:
