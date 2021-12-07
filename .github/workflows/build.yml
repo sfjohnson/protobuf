@@ -24,7 +24,7 @@ jobs:
           ./configure --prefix=${{ github.workspace }}/output --disable-shared
           make -j4
           make install
-          ls ${{ github.workspace }}/output/lib
+          zip include.zip ${{ github.workspace }}/output/include -r
 
       - name: Rename build output
         run: mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-macos10.a
@@ -34,7 +34,7 @@ jobs:
         with:
           name: build-output-macos10
           path: |
-            ${{ github.workspace }}/output/include
+            include.zip
             libprotobuf-lite-macos10.a
 
   build-android:
@@ -58,33 +58,35 @@ jobs:
           LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ld
           CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
 
-      # - name: Rename build output
-      #   run: mv .libs/libopus.a ./libopus-android30.a
+      - name: Rename build output
+        run: mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
 
-      # - name: Upload build output
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: build-output-android30
-      #     path: libopus-android30.a
+      - name: Upload build output
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-output-android30
+          path: libprotobuf-lite-android30.a
 
-  # create-release:
-  #   runs-on: ubuntu-20.04
-  #   needs: [build-macos, build-android]
-  #   steps:
-  #     - name: Get build output macos10
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: build-output-macos10
+  create-release:
+    runs-on: ubuntu-20.04
+    needs: [build-macos, build-android]
+    steps:
+      - name: Get build output macos10
+        uses: actions/download-artifact@v2
+        with:
+          name: build-output-macos10
 
-  #     - name: Get build output android30
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: build-output-android30
+      - name: Get build output android30
+        uses: actions/download-artifact@v2
+        with:
+          name: build-output-android30
 
-  #     - name: Create release
-  #       uses: softprops/action-gh-release@v1
-  #       with:
-  #         files: |
-  #           output
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            include.zip
+            libprotobuf-lite-macos10.a
+            libprotobuf-lite-android30.a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
