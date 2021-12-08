@@ -53,15 +53,15 @@ jobs:
         run: |
           mkdir ${{ github.workspace }}/output
           ./autogen.sh
-          ./configure --prefix=${{ github.workspace }}/output --with-sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile LDFLAGS="-L/usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++/libs/arm64-v8a"
+          ./configure --prefix=${{ github.workspace }}/output --with-sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile LDFLAGS="-L/usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++/libs/arm64-v8a" LIBS="-lc++_static"
           make -j4
           make install
         env:
           AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ranlib
           LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ld
-          CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-          CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
+          CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang --sysroot /usr/local/lib/android/sdk/ndk-bundle/sysroot
+          CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang --sysroot /usr/local/lib/android/sdk/ndk-bundle/sysroot
           CXXSTL: /usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++
 
       - name: Rename build output
