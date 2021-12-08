@@ -61,9 +61,7 @@ jobs:
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ranlib
           LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ld
           CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-          CFLAGS: --sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot
-          CXXFLAGS: --sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot
-          LDFLAGS: --sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot -L$/usr/local/lib/android/sdk/ndk-bundle/sysroot/usr/lib
+          CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
 
       - name: Rename build output
         run: mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
