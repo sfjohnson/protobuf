@@ -24,7 +24,7 @@ jobs:
           ./configure --prefix=${{ github.workspace }}/output --disable-shared
           make -j4
           make install
-          pushd ${{ github.workspace }}/output/include
+          pushd ${{ github.workspace }}/output/include/google/protobuf
           zip -r ../../include.zip .
           popd
 
