@@ -30,6 +30,7 @@ jobs:
 
       - name: Rename and move build output
         run: |
+          mv ${{ github.workspace }}/output/bin/protoc ${{ github.workspace }}/protoc-macos10
           mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a ${{ github.workspace }}/libprotobuf-lite-macos10.a
 
       - name: Upload build output
@@ -37,9 +38,35 @@ jobs:
         with:
           name: build-output-macos10
           path: |
+            ${{ github.workspace }}/protoc-macos10
             ${{ github.workspace }}/include.zip
             ${{ github.workspace }}/libprotobuf-lite-macos10.a
             ${{ github.workspace }}/LICENSE
+
+  build-linux-protoc:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Configure and make
+        run: |
+          mkdir ${{ github.workspace }}/output
+          ./autogen.sh
+          ./configure --prefix=${{ github.workspace }}/output --disable-shared
+          make -j4
+          make install
+
+      - name: Rename and move build output
+        run: mv ${{ github.workspace }}/output/bin/protoc protoc-linux
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-output-linux
+          path: protoc-linux
 
   build-android:
     runs-on: ubuntu-20.04
@@ -64,7 +91,7 @@ jobs:
           CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
           CXXSTL: /usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++
 
-      - name: Rename build output
+      - name: Rename and move build output
         run: mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
 
       - name: Upload build output
@@ -82,6 +109,11 @@ jobs:
         with:
           name: build-output-macos10
 
+      - name: Get build output linux
+        uses: actions/download-artifact@v2
+        with:
+          name: build-output-linux
+
       - name: Get build output android30
         uses: actions/download-artifact@v2
         with:
@@ -91,6 +123,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
+            protoc-macos10
+            protoc-linux
             include.zip
             libprotobuf-lite-macos10.a
             libprotobuf-lite-android30.a
