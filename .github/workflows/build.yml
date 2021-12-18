@@ -102,7 +102,7 @@ jobs:
 
   create-release:
     runs-on: ubuntu-20.04
-    needs: [build-macos, build-android]
+    needs: [build-macos, build-linux-protoc, build-android]
     steps:
       - name: Get build output macos10
         uses: actions/download-artifact@v2
