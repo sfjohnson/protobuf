@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-10.15
+    runs-on: macos-11
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -30,17 +30,17 @@ jobs:
 
       - name: Rename and move build output
         run: |
-          mv ${{ github.workspace }}/output/bin/protoc ${{ github.workspace }}/protoc-macos10
-          mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a ${{ github.workspace }}/libprotobuf-lite-macos10.a
+          mv ${{ github.workspace }}/output/bin/protoc ${{ github.workspace }}/protoc-macos11
+          mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a ${{ github.workspace }}/libprotobuf-lite-macos11.a
 
       - name: Upload build output
         uses: actions/upload-artifact@v2
         with:
-          name: build-output-macos10
+          name: build-output-macos11
           path: |
-            ${{ github.workspace }}/protoc-macos10
+            ${{ github.workspace }}/protoc-macos11
             ${{ github.workspace }}/include.zip
-            ${{ github.workspace }}/libprotobuf-lite-macos10.a
+            ${{ github.workspace }}/libprotobuf-lite-macos11.a
             ${{ github.workspace }}/LICENSE
 
   build-macos-arm64:
@@ -136,10 +136,10 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-macos, build-macos-arm64, build-linux-protoc, build-android]
     steps:
-      - name: Get build output macos10
+      - name: Get build output macos11
         uses: actions/download-artifact@v2
         with:
-          name: build-output-macos10
+          name: build-output-macos11
 
       - name: Get build output macos-arm64
         uses: actions/download-artifact@v2
@@ -160,11 +160,11 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            protoc-macos10
+            protoc-macos11
             protoc-macos-arm64
             protoc-linux
             include.zip
-            libprotobuf-lite-macos10.a
+            libprotobuf-lite-macos11.a
             libprotobuf-lite-android30.a
             libprotobuf-lite-macos-arm64.a
             LICENSE
