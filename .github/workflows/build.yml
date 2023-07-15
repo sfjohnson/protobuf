@@ -99,15 +99,20 @@ jobs:
           name: build-output-linux
           path: protoc-linux
 
-  build-android:
-    runs-on: ubuntu-20.04
+  build-android-and-rpi:
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           persist-credentials: false
 
-      - name: Configure and make
+      - name: Get RPi toolchain
+        run: |
+          wget https://github.com/sfjohnson/rpi-toolchain/releases/download/v0.0.6/arm-rpi-linux-gnueabihf.tar.xz
+          tar xf arm-rpi-linux-gnueabihf.tar.xz -C ~
+
+      - name: Configure and make Android
         run: |
           ln -sf $ANDROID_NDK_ROOT $ANDROID_SDK_ROOT/ndk-bundle
           mkdir ${{ github.workspace }}/output
@@ -115,6 +120,7 @@ jobs:
           ./configure --prefix=${{ github.workspace }}/output --with-sysroot=/usr/local/lib/android/sdk/ndk-bundle/sysroot --host=aarch64-linux-android --disable-shared --enable-cross-compile LDFLAGS="-L/usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++/libs/arm64-v8a" LIBS="-lc++_shared"
           make -j4
           make install
+          mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
         env:
           AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
           RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
@@ -123,18 +129,31 @@ jobs:
           CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
           CXXSTL: /usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++
 
-      - name: Rename and move build output
-        run: mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
+      - name: Configure and make RPi
+        run: |
+          make clean
+          ./configure --prefix=${{ github.workspace }}/output --with-sysroot=/home/runner/arm-rpi-linux-gnueabihf/arm-rpi-linux-gnueabihf/sysroot --host=arm-rpi-linux-gnueabihf --disable-shared --enable-cross-compile
+          make -j4
+          make install
+          mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-rpi.a
+        env:
+          AR: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-ar
+          RANLIB: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-ranlib
+          LD: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-gcc
+          CC: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-gcc
+          CXX: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-g++
 
       - name: Upload build output
         uses: actions/upload-artifact@v2
         with:
-          name: build-output-android30
-          path: libprotobuf-lite-android30.a
+          name: build-output-android-and-rpi
+          path: |
+            libprotobuf-lite-android30.a
+            libprotobuf-lite-rpi.a
 
   create-release:
-    runs-on: ubuntu-20.04
-    needs: [build-macos, build-macos-arm64, build-linux-protoc, build-android]
+    runs-on: ubuntu-22.04
+    needs: [build-macos, build-macos-arm64, build-linux-protoc, build-android-and-rpi]
     steps:
       - name: Get build output macos11
         uses: actions/download-artifact@v2
@@ -154,7 +173,7 @@ jobs:
       - name: Get build output android30
         uses: actions/download-artifact@v2
         with:
-          name: build-output-android30
+          name: build-output-android-and-rpi
 
       - name: Create release
         uses: softprops/action-gh-release@v1
@@ -167,6 +186,7 @@ jobs:
             libprotobuf-lite-macos11.a
             libprotobuf-lite-android30.a
             libprotobuf-lite-macos-arm64.a
+            libprotobuf-lite-rpi.a
             LICENSE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
