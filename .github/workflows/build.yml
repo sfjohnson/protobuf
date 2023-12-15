@@ -56,7 +56,7 @@ jobs:
           mkdir ${{ github.workspace }}/output
           ./autogen.sh
           ./configure --prefix=${{ github.workspace }}/output --disable-shared
-          make -j8
+          make -j4
           make install
           pushd ${{ github.workspace }}/output/include/google/protobuf
           zip -r ../../../../include.zip .
@@ -75,7 +75,7 @@ jobs:
             ${{ github.workspace }}/protoc-macos-arm64
             ${{ github.workspace }}/libprotobuf-lite-macos-arm64.a
 
-  build-linux-protoc:
+  build-linux-x64:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -91,13 +91,17 @@ jobs:
           make -j4
           make install
       - name: Rename and move build output
-        run: mv ${{ github.workspace }}/output/bin/protoc protoc-linux
+        run: |
+          mv ${{ github.workspace }}/output/bin/protoc protoc-linux
+          mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-linux-x64.a
 
       - name: Upload build output
         uses: actions/upload-artifact@v2
         with:
-          name: build-output-linux
-          path: protoc-linux
+          name: build-output-linux-x64
+          path: |
+            protoc-linux
+            libprotobuf-lite-linux-x64.a
 
   build-android-and-rpi:
     runs-on: ubuntu-22.04
@@ -153,7 +157,7 @@ jobs:
 
   create-release:
     runs-on: ubuntu-22.04
-    needs: [build-macos, build-macos-arm64, build-linux-protoc, build-android-and-rpi]
+    needs: [build-macos, build-macos-arm64, build-linux-x64, build-android-and-rpi]
     steps:
       - name: Get build output macos11
         uses: actions/download-artifact@v2
@@ -168,7 +172,7 @@ jobs:
       - name: Get build output linux
         uses: actions/download-artifact@v2
         with:
-          name: build-output-linux
+          name: build-output-linux-x64
 
       - name: Get build output android30
         uses: actions/download-artifact@v2
@@ -187,6 +191,7 @@ jobs:
             libprotobuf-lite-android30.a
             libprotobuf-lite-macos-arm64.a
             libprotobuf-lite-rpi.a
+            libprotobuf-lite-linux-x64.a
             LICENSE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
