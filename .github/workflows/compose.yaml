@@ -7,6 +7,6 @@ services:
       - ../../:/home
     command: >
       sh -c "cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(pwd)/output &&
-        cmake --build . --parallel 4 &&
-        ctest &&
-        cmake --install . &&"
+             cmake --build . --parallel 4 &&
+             ctest &&
+             cmake --install ."
