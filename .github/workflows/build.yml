@@ -14,9 +14,6 @@ jobs:
         with:
           persist-credentials: false
 
-      # - name: Install dependencies
-      #   run: brew install autoconf automake libtool
-
       - name: Configure and make
         run: |
           git submodule update --init --recursive
@@ -78,7 +75,7 @@ jobs:
             ${{ github.workspace }}/libprotobuf-lite-macos-arm64.a
 
   build-linux-x64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -114,49 +111,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Get RPi toolchain
-        run: |
-          wget https://github.com/sfjohnson/rpi-toolchain/releases/download/v0.0.6/arm-rpi-linux-gnueabihf.tar.xz
-          tar xf arm-rpi-linux-gnueabihf.tar.xz -C ~
+      # - name: Configure and make Android
+      #   run: |
+      #     git submodule update --init --recursive
+      #     ln -sf $ANDROID_NDK_ROOT $ANDROID_SDK_ROOT/ndk-bundle
+      #     mkdir ${{ github.workspace }}/output
+      #     cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output -DCMAKE_SYSROOT=/usr/local/lib/android/sdk/ndk-bundle/sysroot -DCMAKE_HOST_SYSTEM=aarch64-linux-android -DCMAKE_CXX_STANDARD_LIBRARIES=-lc++_shared
+      #     cmake --build . --parallel 4
+      #     cmake --install .
+      #     mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
 
-      - name: Configure and make Android
-        run: |
-          git submodule update --init --recursive
-          ln -sf $ANDROID_NDK_ROOT $ANDROID_SDK_ROOT/ndk-bundle
-          mkdir ${{ github.workspace }}/output
-          cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output -DCMAKE_SYSROOT=/usr/local/lib/android/sdk/ndk-bundle/sysroot -DCMAKE_HOST_SYSTEM=aarch64-linux-android -DCMAKE_CXX_STANDARD_LIBRARIES=-lc++_shared
-          cmake --build . --parallel 4
-          cmake --install .
-          mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
-
-        env:
-          AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
-          RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
-          LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/ld
-          CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-          CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-          CXXSTL: /usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++
-          LDFLAGS: -L/usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++/libs/arm64-v8a
+      #   env:
+      #     AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+      #     RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+      #     LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/ld
+      #     CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
+      #     CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
+      #     CXXSTL: /usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++
+      #     LDFLAGS: -L/usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++/libs/arm64-v8a
 
       - name: Configure and make RPi
         run: |
-          cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output -DCMAKE_SYSROOT=/home/runner/arm-rpi-linux-gnueabihf/arm-rpi-linux-gnueabihf/sysroot -DCMAKE_HOST_SYSTEM=arm-rpi-linux-gnueabihf
-          cmake --build . --parallel 4
-          cmake --install .
+          git submodule update --init --recursive
+          mkdir ${{ github.workspace }}/output
+          docker compose -f ${{ github.action_path }}/compose.yml up
           mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-rpi.a
-        env:
-          AR: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-ar
-          RANLIB: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-ranlib
-          LD: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-gcc
-          CC: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-gcc
-          CXX: /home/runner/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-g++
 
       - name: Upload build output
         uses: actions/upload-artifact@v2
         with:
           name: build-output-android-and-rpi
           path: |
-            libprotobuf-lite-android30.a
             libprotobuf-lite-rpi.a
 
   create-release:
@@ -192,7 +177,6 @@ jobs:
             protoc-linux
             include.zip
             libprotobuf-lite-macos11.a
-            libprotobuf-lite-android30.a
             libprotobuf-lite-macos-arm64.a
             libprotobuf-lite-rpi.a
             libprotobuf-lite-linux-x64.a
