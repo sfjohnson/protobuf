@@ -134,7 +134,7 @@ jobs:
         run: |
           git submodule update --init --recursive
           mkdir ${{ github.workspace }}/output
-          docker compose -f ${{ github.action_path }}/compose.yml up
+          docker compose -f ${{ github.workspace }}/.github/workflows/compose.yml up
           mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-rpi.a
 
       - name: Upload build output
