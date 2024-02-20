@@ -23,6 +23,7 @@ jobs:
           ctest
           cmake --install .
           pushd ${{ github.workspace }}/output/include/google/protobuf
+          mv ../../absl .
           zip -r ../../../../include.zip .
           popd
 
@@ -57,9 +58,6 @@ jobs:
           cmake --build . --parallel 4
           ctest
           cmake --install .
-          pushd ${{ github.workspace }}/output/include/google/protobuf
-          zip -r ../../../../include.zip .
-          popd
 
       - name: Rename and move build output
         run: |
@@ -90,6 +88,7 @@ jobs:
           cmake --build . --parallel 4
           ctest
           cmake --install .
+
       - name: Rename and move build output
         run: |
           mv ${{ github.workspace }}/output/bin/protoc protoc-linux
