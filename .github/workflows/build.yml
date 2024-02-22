@@ -87,6 +87,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install deps
+        run: sudo apt install libtool-bin
+
       - name: Configure and make
         run: |
           git submodule update --init --recursive
@@ -125,6 +128,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Install deps
+        run: sudo apt install libtool-bin
 
       # - name: Configure and make Android
       #   run: |
