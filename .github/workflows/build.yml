@@ -58,7 +58,7 @@ jobs:
         run: |
           git submodule update --init --recursive
           mkdir ${{ github.workspace }}/output
-          cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output
+          cmake . -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output
           cmake --build . --parallel 4
           ctest
           cmake --install .
