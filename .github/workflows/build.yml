@@ -102,7 +102,7 @@ jobs:
       - name: Merge in Abseil and move build output
         run: |
           pushd ${{ github.workspace }}/output/lib
-          FILE_INDEX=0 ; for file in ./*.a ; do mkdir $FILE_INDEX ; ar x --output $FILE_INDEX $file ; ((FILE_INDEX++)) ; done
+          FILE_INDEX=0 ; for file in ./*.a ; do mkdir $FILE_INDEX ; ar x --output $FILE_INDEX $file ; ((++FILE_INDEX)) ; done
           ar cr libprotobuf-lite-absl.a $(find -name "*.o" | tr "\n" " ")
           popd
           mv ${{ github.workspace }}/output/bin/protoc protoc-linux
@@ -161,7 +161,7 @@ jobs:
       - name: Merge in Abseil and move build output
         run: |
           pushd ${{ github.workspace }}/output/lib
-          FILE_INDEX=0 ; for file in ./*.a ; do mkdir $FILE_INDEX ; ar x --output $FILE_INDEX $file ; ((FILE_INDEX++)) ; done
+          FILE_INDEX=0 ; for file in ./*.a ; do mkdir $FILE_INDEX ; ar x --output $FILE_INDEX $file ; ((++FILE_INDEX)) ; done
           ar cr libprotobuf-lite-absl.a $(find -name "*.o" | tr "\n" " ")
           popd
           sudo mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a libprotobuf-lite-rpi.a
