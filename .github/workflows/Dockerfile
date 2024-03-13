@@ -1,3 +1,3 @@
-FROM debian:latest
+FROM balenalib/raspberry-pi-debian:latest
 
-RUN apt update; apt -y install build-essential cmake git
+RUN install_packages build-essential cmake git
