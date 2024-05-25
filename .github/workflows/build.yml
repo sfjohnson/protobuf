@@ -10,7 +10,7 @@ jobs:
     runs-on: macos-11
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
@@ -37,7 +37,7 @@ jobs:
           mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a ${{ github.workspace }}/libprotobuf-lite-macos11.a
 
       - name: Upload build output
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-output-macos11
           path: |
@@ -50,7 +50,7 @@ jobs:
     runs-on: flyci-macos-large-latest-m1
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
@@ -72,7 +72,7 @@ jobs:
           mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a ${{ github.workspace }}/libprotobuf-lite-macos-arm64.a
 
       - name: Upload build output
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-output-macos-arm64
           path: |
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
@@ -109,7 +109,7 @@ jobs:
           mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a libprotobuf-lite-linux-x64.a
 
       - name: Upload build output
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-output-linux-x64
           path: |
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
@@ -133,32 +133,30 @@ jobs:
       - name: Install deps
         run: sudo apt install libtool-bin
 
-      # - name: Configure and make Android
-      #   run: |
-      #     git submodule update --init --recursive
-      #     ln -sf $ANDROID_NDK_ROOT $ANDROID_SDK_ROOT/ndk-bundle
-      #     mkdir ${{ github.workspace }}/output
-      #     cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output -DCMAKE_SYSROOT=/usr/local/lib/android/sdk/ndk-bundle/sysroot -DCMAKE_HOST_SYSTEM=aarch64-linux-android -DCMAKE_CXX_STANDARD_LIBRARIES=-lc++_shared
-      #     cmake --build . --parallel 4
-      #     cmake --install .
-      #     mv ${{ github.workspace }}/output/lib/libprotobuf-lite.a libprotobuf-lite-android30.a
-
-      #   env:
-      #     AR: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
-      #     RANLIB: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
-      #     LD: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/ld
-      #     CC: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-      #     CXX: /usr/local/lib/android/sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-      #     CXXSTL: /usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++
-      #     LDFLAGS: -L/usr/local/lib/android/sdk/ndk-bundle/sources/cxx-stl/llvm-libc++/libs/arm64-v8a
-
-      - name: Configure and make RPi
+      - name: Configure and make Android
         run: |
           git submodule update --init --recursive
           mkdir ${{ github.workspace }}/output
+          cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake -DANDROID_PLATFORM=android-30 -DANDROID_ABI=arm64-v8a
+          cmake --build . --parallel 4
+          cmake --install .
+
+      - name: Merge in Abseil and move build output Android
+        run: |
+          pushd ${{ github.workspace }}/output/lib
+          FILE_INDEX=0 ; for file in ./*.a ; do mkdir $FILE_INDEX ; ar x --output $FILE_INDEX $file ; ((++FILE_INDEX)) ; done
+          ar cr libprotobuf-lite-absl.a $(find -name "*.o" | tr "\n" " ")
+          popd
+          mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a libprotobuf-lite-android30.a
+
+      - name: Configure and make RPi
+        run: |
+          rm CMakeCache.txt
+          rm -rf ${{ github.workspace }}/output
+          mkdir ${{ github.workspace }}/output
           docker compose -f ${{ github.workspace }}/.github/workflows/compose.yaml up
 
-      - name: Merge in Abseil and move build output
+      - name: Merge in Abseil and move build output RPi
         run: |
           pushd ${{ github.workspace }}/output/lib
           FILE_INDEX=0 ; for file in ./*.a ; do sudo mkdir $FILE_INDEX ; sudo ar x --output $FILE_INDEX $file ; ((++FILE_INDEX)) ; done
@@ -167,38 +165,39 @@ jobs:
           sudo mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a libprotobuf-lite-rpi.a
 
       - name: Upload build output
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-output-android-and-rpi
           path: |
             libprotobuf-lite-rpi.a
+            libprotobuf-lite-android30.a
 
   create-release:
     runs-on: ubuntu-22.04
     needs: [build-macos, build-macos-arm64, build-linux-x64, build-android-and-rpi]
     steps:
       - name: Get build output macos11
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: build-output-macos11
 
       - name: Get build output macos-arm64
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: build-output-macos-arm64
 
       - name: Get build output linux
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: build-output-linux-x64
 
-      - name: Get build output android30
-        uses: actions/download-artifact@v2
+      - name: Get build output android and RPi
+        uses: actions/download-artifact@v4
         with:
           name: build-output-android-and-rpi
 
       - name: Create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             protoc-macos11
@@ -208,6 +207,7 @@ jobs:
             libprotobuf-lite-macos11.a
             libprotobuf-lite-macos-arm64.a
             libprotobuf-lite-rpi.a
+            libprotobuf-lite-android30.a
             libprotobuf-lite-linux-x64.a
             LICENSE
         env:
