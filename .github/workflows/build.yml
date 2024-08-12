@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,21 +33,21 @@ jobs:
           # long command is long
           libtool -static -o ./libprotobuf-lite-absl.a ./libprotobuf-lite.a ./libabsl_die_if_null.a ./libabsl_log_internal_conditions.a ./libabsl_city.a ./libabsl_time_zone.a ./libabsl_kernel_timeout_internal.a ./libabsl_spinlock_wait.a ./libabsl_cord.a ./libabsl_status.a ./libabsl_log_severity.a ./libabsl_failure_signal_handler.a ./libabsl_log_internal_nullguard.a ./libabsl_log_internal_log_sink_set.a ./libabsl_bad_optional_access.a ./libabsl_hash.a ./libabsl_flags_commandlineflag.a ./libabsl_raw_logging_internal.a ./libabsl_log_internal_format.a ./libabsl_string_view.a ./libabsl_random_internal_pool_urbg.a ./libabsl_cord_internal.a ./libabsl_base.a ./libabsl_cordz_info.a ./libabsl_bad_any_cast_impl.a ./libabsl_periodic_sampler.a ./libabsl_random_distributions.a ./libabsl_flags_usage_internal.a ./libabsl_random_seed_sequences.a ./libabsl_random_internal_platform.a ./libabsl_throw_delegate.a ./libabsl_debugging_internal.a ./libabsl_flags_private_handle_accessor.a ./libabsl_strings.a ./libabsl_flags.a ./libabsl_malloc_internal.a ./libabsl_str_format_internal.a ./libabsl_flags_usage.a ./libabsl_strings_internal.a ./libabsl_flags_program_name.a ./libabsl_int128.a ./libabsl_crc_cord_state.a ./libabsl_scoped_set_env.a ./libabsl_raw_hash_set.a ./libabsl_crc32c.a ./libabsl_random_internal_seed_material.a ./libabsl_scoped_mock_log.a ./libabsl_symbolize.a ./libabsl_crc_internal.a ./libabsl_random_internal_randen_slow.a ./libabsl_graphcycles_internal.a ./libabsl_exponential_biased.a ./libabsl_random_internal_randen_hwaes_impl.a ./libabsl_crc_cpu_detect.a ./libabsl_bad_variant_access.a ./libabsl_statusor.a ./libabsl_log_internal_globals.a ./libabsl_log_sink.a ./libabsl_log_internal_check_op.a ./libabsl_stacktrace.a ./libabsl_cordz_handle.a ./libabsl_log_internal_message.a ./libabsl_log_initialize.a ./libabsl_random_internal_randen_hwaes.a ./libabsl_flags_parse.a ./libabsl_log_globals.a ./libabsl_log_internal_proto.a ./libabsl_random_internal_randen.a ./libabsl_random_internal_distribution_test_util.a ./libabsl_time.a ./libabsl_flags_config.a ./libabsl_synchronization.a ./libabsl_flags_commandlineflag_internal.a ./libabsl_hashtablez_sampler.a ./libabsl_demangle_internal.a ./libabsl_leak_check.a ./libabsl_flags_marshalling.a ./libabsl_strerror.a ./libabsl_log_entry.a ./libabsl_flags_reflection.a ./libabsl_cordz_functions.a ./libabsl_examine_stack.a ./libabsl_flags_internal.a ./libabsl_low_level_hash.a ./libabsl_random_seed_gen_exception.a ./libabsl_log_flags.a ./libabsl_cordz_sample_token.a ./libabsl_civil_time.a ./libutf8_range.a ./libutf8_validity.a
           popd
-          mv ${{ github.workspace }}/output/bin/protoc ${{ github.workspace }}/protoc-macos11
-          mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a ${{ github.workspace }}/libprotobuf-lite-macos11.a
+          mv ${{ github.workspace }}/output/bin/protoc ${{ github.workspace }}/protoc-macos12
+          mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a ${{ github.workspace }}/libprotobuf-lite-macos12.a
 
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
-          name: build-output-macos11
+          name: build-output-macos12
           path: |
-            ${{ github.workspace }}/protoc-macos11
+            ${{ github.workspace }}/protoc-macos12
             ${{ github.workspace }}/include.zip
-            ${{ github.workspace }}/libprotobuf-lite-macos11.a
+            ${{ github.workspace }}/libprotobuf-lite-macos12.a
             ${{ github.workspace }}/LICENSE
 
   build-macos-arm64:
-    runs-on: flyci-macos-large-latest-m2
+    runs-on: macos-14-xlarge
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,7 +116,7 @@ jobs:
             protoc-linux
             libprotobuf-lite-linux-x64.a
 
-  build-android-and-rpi:
+  build-rpi-arm64:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -130,29 +130,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Install deps
-        run: sudo apt install libtool-bin
-
-      - name: Configure and make Android
-        run: |
-          git submodule update --init --recursive
-          mkdir ${{ github.workspace }}/output
-          cmake . -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_PROTOC_BINARIES=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/output -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake -DANDROID_PLATFORM=android-30 -DANDROID_ABI=arm64-v8a
-          cmake --build . --parallel 4
-          cmake --install .
-
-      - name: Merge in Abseil and move build output Android
-        run: |
-          pushd ${{ github.workspace }}/output/lib
-          FILE_INDEX=0 ; for file in ./*.a ; do mkdir $FILE_INDEX ; ar x --output $FILE_INDEX $file ; ((++FILE_INDEX)) ; done
-          ar cr libprotobuf-lite-absl.a $(find -name "*.o" | tr "\n" " ")
-          popd
-          mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a libprotobuf-lite-android30.a
-
       - name: Configure and make RPi
         run: |
-          rm CMakeCache.txt
-          rm -rf ${{ github.workspace }}/output
+          git submodule update --init --recursive
           mkdir ${{ github.workspace }}/output
           docker compose -f ${{ github.workspace }}/.github/workflows/compose.yaml up
 
@@ -162,24 +142,23 @@ jobs:
           FILE_INDEX=0 ; for file in ./*.a ; do sudo mkdir $FILE_INDEX ; sudo ar x --output $FILE_INDEX $file ; ((++FILE_INDEX)) ; done
           sudo ar cr libprotobuf-lite-absl.a $(find -name "*.o" | tr "\n" " ")
           popd
-          sudo mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a libprotobuf-lite-rpi.a
+          sudo mv ${{ github.workspace }}/output/lib/libprotobuf-lite-absl.a libprotobuf-lite-rpi-arm64.a
 
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
-          name: build-output-android-and-rpi
+          name: build-output-rpi-arm64
           path: |
-            libprotobuf-lite-rpi.a
-            libprotobuf-lite-android30.a
+            libprotobuf-lite-rpi-arm64.a
 
   create-release:
     runs-on: ubuntu-22.04
-    needs: [build-macos, build-macos-arm64, build-linux-x64, build-android-and-rpi]
+    needs: [build-macos, build-macos-arm64, build-linux-x64, build-rpi-arm64]
     steps:
-      - name: Get build output macos11
+      - name: Get build output macos12
         uses: actions/download-artifact@v4
         with:
-          name: build-output-macos11
+          name: build-output-macos12
 
       - name: Get build output macos-arm64
         uses: actions/download-artifact@v4
@@ -191,23 +170,22 @@ jobs:
         with:
           name: build-output-linux-x64
 
-      - name: Get build output android and RPi
+      - name: Get build output RPi
         uses: actions/download-artifact@v4
         with:
-          name: build-output-android-and-rpi
+          name: build-output-rpi-arm64
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            protoc-macos11
+            protoc-macos12
             protoc-macos-arm64
             protoc-linux
             include.zip
-            libprotobuf-lite-macos11.a
+            libprotobuf-lite-macos12.a
             libprotobuf-lite-macos-arm64.a
-            libprotobuf-lite-rpi.a
-            libprotobuf-lite-android30.a
+            libprotobuf-lite-rpi-arm64.a
             libprotobuf-lite-linux-x64.a
             LICENSE
         env:

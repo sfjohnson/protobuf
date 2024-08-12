@@ -1,13 +1,13 @@
 services:
   rpi-builder:
     build: .
-    platform: linux/arm/v6
+    platform: linux/arm64/v8
     environment:
-      - QEMU_CPU=arm1176
+      - QEMU_CPU=cortex-a72
     working_dir: /home
     volumes:
       - ../../:/home
     command: >
-      sh -c "cmake . -DCMAKE_SYSTEM_PROCESSOR=armv6 -DCMAKE_CXX_FLAGS=-march=armv6zk -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_PROTOC_BINARIES=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(pwd)/output &&
+      sh -c "cmake . -DCMAKE_SYSTEM_PROCESSOR=armv8 -DCMAKE_CXX_FLAGS=-march=armv8-a -DCMAKE_CXX_STANDARD=14 -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_PROTOC_BINARIES=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(pwd)/output &&
              cmake --build . --parallel 4 &&
              cmake --install ."
